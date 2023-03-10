@@ -120,7 +120,12 @@ class Graph:
         """
         Should return path, min_power. 
         """
-        # vérification composante connexe
+        # On vérifie que src et dest sont dans la même composante connexe.
+        connected_components=self.connected_components_set()
+        for connected in connected_components:
+            if src in connected:
+                if dest not in connected:
+                    return None
         power=2
         while self.get_path_with_power(src, dest, power)==None:
             power=power*2
