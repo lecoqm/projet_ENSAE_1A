@@ -61,7 +61,7 @@ class Graph:
                     distprime[i-1]=np.inf
                 else:
                     distprime[i-1]=dist[i-1]
-            node=1+dist.index(min(distprime))
+            node=1+distprime.index(min(distprime))
             nodesPassed.append(node)
             neighbors=[]
             for i in range(len(self.graph[node])):
