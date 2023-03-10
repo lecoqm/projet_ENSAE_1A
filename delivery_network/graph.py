@@ -1,3 +1,5 @@
+import numpy as np
+
 class Graph:
     def __init__(self, nodes=[]):
         self.nodes = nodes
@@ -46,25 +48,48 @@ class Graph:
         #raise NotImplementedError
     
 
-    def get_path_with_power(self, src, dest, power,edges_passed=set(),dist=0):
-        test=False
-        neighbors=[self.graph[src][i][0] for i in range(len(self.graph[src]))]
-        for i in len(neighbors):
-            if [src,neighbor[i][0]] not in edges_passed and neighbor[i][1]<=power:
-                dist+=neighbor[i][2]
-                if neighbor[i][0]==dest:
-                    return [src,dest],True,dist
-                edges_passed.append([src,neighbor[i][0]])
-
-
-
-
-
-        raise NotImplementedError
+    def get_path_with_power(self, src, dest, power):
+        nodesPassed=[]
+        dist=[np.inf]*len(self.nodes)
+        dist[src-1]=0
+        test=True
+        predecessor={}
+        distprime=dist.copy()
+        while test and len(nodesPassed)<len(self.nodes):
+            for i in self.nodes:
+                if i in nodesPassed:
+                    distprime[i-1]=np.inf
+                else:
+                    distprime[i-1]=dist[i-1]
+            node=1+dist.index(min(distprime))
+            nodesPassed.append(node)
+            neighbors=[]
+            for i in range(len(self.graph[node])):
+                if self.graph[node][i][0] not in nodesPassed and self.graph[node][i][1]<=power:
+                    neighbors.append(self.graph[node][i])
+            for node_neighbor in neighbors:
+                if dist[node_neighbor[0]-1]>dist[node-1]+node_neighbor[2]:
+                    dist[node_neighbor[0]-1]=dist[node-1]+node_neighbor[2]
+                    predecessor[node_neighbor[0]]=node
+            test=False
+            for i in range (1,1+len(dist)):
+                if i not in nodesPassed and dist[i-1]!=np.inf:
+                    test=True
+        if dest in nodesPassed:
+            path=[dest]
+            node=dest
+            while node != src:
+                node=predecessor[node]
+                path.append(node)
+            path.reverse()
+            return path
+        else:
+            return None
+            raise NotImplementedError
     
     def one_connected_components(self, node, nodes_known):
         connected_component=[node]
-        neibors=[self.graph[node][i][0] for i in range(len(self.graph[node]))]
+        neighbors=[self.graph[node][i][0] for i in range(len(self.graph[node]))]
         for node_neighbor in neighbors:
             if node_neighbor not in nodes_known:
                 nodes_known.add(node_neighbor)
@@ -95,6 +120,24 @@ class Graph:
         """
         Should return path, min_power. 
         """
+        # vérification composante connexe
+        power=2
+        while self.get_path_with_power(src, dest, power)==None:
+            power=power*2
+        inf=power//2
+        sup=power
+        mid=(sup+inf)//2
+        while sup-inf>1:
+            if self.get_path_with_power(src, dest, mid)==None:
+                inf=mid
+                mid=(sup+inf)//2
+            else:
+                sup=mid
+                mid=(sup+inf)//2
+        if self.get_path_with_power(src, dest, inf)==None:
+            return sup, self.get_path_with_power(src, dest, sup)
+        else:
+            return inf, self.get_path_with_power(src, dest, inf)
 
         raise NotImplementedError
 
