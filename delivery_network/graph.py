@@ -98,14 +98,14 @@ class Graph:
         return connected_component, nodes_known
 
     def connected_components(self):
-        self.connected_components=[]
+        self.connect_components=[]
         nodes_known=set()
         for node in self.nodes:
             if node not in nodes_known:
                 nodes_known.add(node)
-                connected_componentes, nodes_known=self.one_connected_components(node, nodes_known)
-                self.connected_components.append(connected_componentes)
-        return self.connected_components
+                connect_componentes, nodes_known=self.one_connected_components(node, nodes_known)
+                self.connect_components.append(connect_componentes)
+        return self.connect_components
         raise NotImplementedError
     
 
@@ -116,6 +116,38 @@ class Graph:
         """    
         return set(map(frozenset, self.connected_components()))
     
+    def kpath(self,src,dest):
+        connected_components=self.connected_components_set()
+        for connected in connected_components:
+            if src in connected:
+                if dest not in connected:
+                    return None,None
+        predecessor={}
+        queue=[src]
+        test=True
+        while test:
+            node=queue[0]
+            neighbors=self.graph[node]
+            for neighbor in neighbors:
+                for i in self.graph[neighbor[0]]:
+                    if i[0]==node:
+                        self.graph[neighbor[0]].remove(i)
+                predecessor[neighbor[0]]=[node,neighbor[1]]
+                queue.append(neighbor[0])
+                if neighbor[0]==dest:
+                    test=False
+            queue.pop(0)
+        path=[dest]
+        node=dest
+        power=0
+        while node != src:
+            if predecessor[node][1]>power:
+                power=predecessor[node][1]
+            node=predecessor[node][0]
+            path.append(node)
+        path.reverse()
+        return path, power
+
     def min_power(self, src, dest):
         """
         Should return path, min_power. 
@@ -125,7 +157,7 @@ class Graph:
         for connected in connected_components:
             if src in connected:
                 if dest not in connected:
-                    return None
+                    return None,None
         power=2
         while self.get_path_with_power(src, dest, power)==None:
             power=power*2
@@ -145,6 +177,10 @@ class Graph:
             return inf, self.get_path_with_power(src, dest, inf)
 
         raise NotImplementedError
+
+        
+                
+            
 
 
 def graph_from_file(filename):
