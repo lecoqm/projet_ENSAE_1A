@@ -1,0 +1,37 @@
+from graph import Graph
+
+def union(node1,node2,parents):
+    N1=find(node1,parents)
+    N2=find(node2,parents)
+    if N1!=N2:
+        parents[N1]=N2
+    return parents
+
+def find(node,parents):
+    if parents[node]==None:
+        return node
+    return find(parents[node],parents)
+
+def kruskal(g):
+    # Trie les arêtes du graphe par ordre croissant de poids
+    edges=[]
+    for node,neighbors in g.graph.items():
+        for neighbor in neighbors:
+            edges.append((node,neighbor[0],neighbor[1],neighbor[2]))
+    edges=sorted(edges,key=lambda x: x[2])
+    # Initialise la forêt couvrante vide
+    g_mst=Graph(nodes=[])
+    # technique Union-Find :
+    # Initialise un dictionnaire pour suivre la composante connexe de chaque sommet
+    parents = dict([(n, None) for n in g.nodes])
+    # Parcourt toutes les arêtes triées
+    for edge in edges:
+        # Récupère les deux sommets reliés par l'arête et leur poids
+        node1, node2, power, dist = edge
+        # Si les deux sommets appartiennent à des composantes connexes différentes,
+        # ajoute l'arête à la forêt couvrante et fusionne les deux composantes
+        if find(node1,parents) != find(node2,parents):
+            g_mst.add_edge(node1,node2,power,dist)
+            parents=union(node1,node2,parents)
+    return g_mst
+
