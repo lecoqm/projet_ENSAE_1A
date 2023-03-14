@@ -1,5 +1,11 @@
 from graph import Graph
 
+
+# La fonction find permet de savoir si deux noeuds sont dans la même composante connexe.
+# En effet si on a établit que deux noeuds sont dans la même composante connexe, on les 
+# associe à un même de noeud de référence (qui représente l'ensemble de la composante connexe)
+# dans la fonction union.
+
 def union(node1,node2,parents):
     N1=find(node1,parents)
     N2=find(node2,parents)
