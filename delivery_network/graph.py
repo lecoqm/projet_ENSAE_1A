@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 class Graph:
     def __init__(self, nodes=[]):
@@ -34,11 +35,14 @@ class Graph:
             Distance between node1 and node2 on the edge. Default is 1.
         """
 
-        if node1 not in self.nodes:
-            self.nodes.append(node1)
-            self.graph[node1] = [[node2, power_min, dist]]
+        if node1 not in self.nodes: # si le noeud 1 n'est jamais apparu
+            self.nodes.append(node1) # On l'ajoute dans l'ensemble des noeuds
+            # On l'ajoute dans le dictionnaire, avec pour premier voisisn le noeud 2
+            self.graph[node1] = [[node2, power_min, dist]] 
         else:
+            # Sinon, on rajoute le noeud 2 à la liste des voisins du noeud 1
             self.graph[node1].append([node2,power_min,dist])
+            # De même pour le noeud 2
         if node2 not in self.nodes:
             self.nodes.append(node2)
             self.graph[node2]=[[node1,power_min,dist]]
@@ -49,32 +53,55 @@ class Graph:
     
 
     def get_path_with_power(self, src, dest, power):
-        nodesPassed=[]
+        """Ce graphe permet d'obtenir le plus court chemin entre 2 points, avec une 
+        contrainte de puissance. Pour cela on associe un poid dist à chaque noeud, initialisé à l'infini
+        pour chaque noeud, sauf pour le noeud initial qui est à 0. 
+        A la première itération, on modifie la dist des voisins du noeud initiale pour qu'elle
+        soit égale à la distance entre le noeud initiale et son voisin, puis on note que le prédécesseur
+        de ces noeuds voisins est le noeud initial.
+        Pour les itérations suivantes, on choisit le noeud par lequel on n'est pas déjà passé avec la 
+        plus petite dist, on modifie la dist de ses voisinpar lesquels on n'est pas déjà passé
+        tel quelle soit égale à la dist du noeud choisit, plus la distance entre ce noeud et le 
+        voisin, et on note que le prédécesseur de ces noeuds voisins est le noeud choisit.
+        Puis on itère jusqu'à trouver le noeud dest ou que tout les noeuds par lesquels on n'est 
+        pas passé soient à une distance infini (dans ce cas, cela veut dire qu'il n'y a pas de
+        chemin entre src et dest)."""
+        # On initialise la liste contenant les noeuds passés et la distance
+        nodesPassed=[]  
         dist=[np.inf]*len(self.nodes)
         dist[src-1]=0
-        test=True
+        test=True  # Permet de vérifier si le noeud dest est atteint et si il y a encore des chemins
         predecessor={}
+        # distprime vaut la même valeur que dist, sauf si on est déjà passé par ce noeud,
+        # et vaut alors inf. Ce qui permet d'éviter de sélectionner 2 fois un même noeud
         distprime=dist.copy()
         while test and len(nodesPassed)<len(self.nodes):
+            # On modifie distprime
             for i in self.nodes:
                 if i in nodesPassed:
                     distprime[i-1]=np.inf
                 else:
                     distprime[i-1]=dist[i-1]
+            # On choisit notre nouveau noeud
             node=1+distprime.index(min(distprime))
             nodesPassed.append(node)
+            # On détermine ses voisins
             neighbors=[]
             for i in range(len(self.graph[node])):
                 if self.graph[node][i][0] not in nodesPassed and self.graph[node][i][1]<=power:
                     neighbors.append(self.graph[node][i])
+            # On modifie la dist de ses voisins
             for node_neighbor in neighbors:
                 if dist[node_neighbor[0]-1]>dist[node-1]+node_neighbor[2]:
                     dist[node_neighbor[0]-1]=dist[node-1]+node_neighbor[2]
                     predecessor[node_neighbor[0]]=node
+            # On vérifie si on a atteint la dest et si il y a encore des chemins
             test=False
             for i in range (1,1+len(dist)):
                 if i not in nodesPassed and dist[i-1]!=np.inf:
                     test=True
+        # Si on a atteint dest, on remonte les prédécesseurs en partant de dest jusqu'à src
+        # pour avoir le chemin
         if dest in nodesPassed:
             path=[dest]
             node=dest
@@ -83,16 +110,19 @@ class Graph:
                 path.append(node)
             path.reverse()
             return path
-        else:
+        else: # Si on n'a pas atteint dest, on renvoie None
             return None
             raise NotImplementedError
     
     def one_connected_components(self, node, nodes_known):
+        # On parcours l'ensemble des noeuds sur la composante connexe avec un parcours en profondeur
+        # Par récursivité
         connected_component=[node]
         neighbors=[self.graph[node][i][0] for i in range(len(self.graph[node]))]
         for node_neighbor in neighbors:
             if node_neighbor not in nodes_known:
-                nodes_known.add(node_neighbor)
+                nodes_known.add(node_neighbor) # On ajoute d'abord les voisins de notre noeud initiale
+                #Puis on itère la fonction pour avoir les voisins des voisins,...
                 connected_component_1,nodes_known=self.one_connected_components(node_neighbor,nodes_known)
                 connected_component+=connected_component_1
         return connected_component, nodes_known
@@ -100,9 +130,10 @@ class Graph:
     def connected_components(self):
         self.connect_components=[]
         nodes_known=set()
-        for node in self.nodes:
-            if node not in nodes_known:
+        for node in self.nodes:   # On parcours tous les noeuds du graphe
+            if node not in nodes_known:   # Si ils ont déjà été parcouru, on ne les prend pas une seuconde fois
                 nodes_known.add(node)
+                # On regarde sa composante connexe
                 connect_componentes, nodes_known=self.one_connected_components(node, nodes_known)
                 self.connect_components.append(connect_componentes)
         return self.connect_components
@@ -117,25 +148,38 @@ class Graph:
         return set(map(frozenset, self.connected_components()))
     
     def kpath(self,src,dest):
-        connected_components=self.connected_components_set()
+        # On vérifie src et dest sont dans la même composante connexe
+        connected_components=self.connected_components()
         for connected in connected_components:
             if src in connected:
                 if dest not in connected:
                     return None,None
-        predecessor={}
-        queue=[src]
-        test=True
+        # On vérifie que src!=dest
+        if src==dest:
+            return None,None
+        # On fait un parcours en largeur.
+        predecessor={} # On crée un dictionnaire où on va associer les noeuds à leur prédécesseur
+        queue=[src] # On initialise la file 
+        test=True # Permet de vérifier si on atteint dest
+        # On copie le graphe pour pouvoir supprimer les arêtes par lesquels on passe
+        # au fur et à mesure
+        graph=copy.deepcopy(self.graph) 
         while test:
             node=queue[0]
-            neighbors=self.graph[node]
+            neighbors=graph[node]
             for neighbor in neighbors:
-                for i in self.graph[neighbor[0]]:
+                # On retire l'arête par laquelle on vient de passer
+                # pour éviter de repasser dessus
+                for i in graph[neighbor[0]]:
                     if i[0]==node:
-                        self.graph[neighbor[0]].remove(i)
+                        graph[neighbor[0]].remove(i)
+                # On associe à chaqu'un des voisins du noeud ce noeud comme prédécesseur
                 predecessor[neighbor[0]]=[node,neighbor[1]]
                 queue.append(neighbor[0])
+                # On regarde si on a atteint dest
                 if neighbor[0]==dest:
                     test=False
+            # On retire le noeud sur lequel on travaillait de a file
             queue.pop(0)
         path=[dest]
         node=dest
@@ -158,9 +202,14 @@ class Graph:
             if src in connected:
                 if dest not in connected:
                     return None,None
+        # On vérifie que la source et la destination sont différents
+        if src==dest:
+            return None,None
+        # On regarde la plus petite puissance de 2 pour laquelle il y a un chemin
         power=2
         while self.get_path_with_power(src, dest, power)==None:
             power=power*2
+        # Puis on fait une dichotomie entre cette puissance de 2 et celle inférieure
         inf=power//2
         sup=power
         mid=(sup+inf)//2
@@ -204,18 +253,18 @@ def graph_from_file(filename):
         An object of the class Graph with the graph from file_name.
     """
 
-    G=Graph(nodes=[])
+    G=Graph(nodes=[])   # On crée le graphe initialement vide
     f=open(filename,"r")
-    lines=f.readlines()
+    lines=f.readlines()    # On lit ligne par ligne
     for i in lines:
         data=i.split(" ")
-        if len(data)==3:
+        if len(data)==3:    # Si trois éléments, alors il n'y a pas la distance
             node1,node2,power_min=int(data[0]),int(data[1]),int(data[2])
             G.add_edge(node1,node2,power_min)
-        if len(data)==4:
+        if len(data)==4: # Si quatre éléments, alors il y a la distance
             node1,node2,power_min,dist=int(data[0]),int(data[1]),int(data[2]),int(data[3])
             G.add_edge(node1,node2,power_min,dist)
-        if len(data)==2:
+        if len(data)==2:    # Si deux éléments, alors il s'agit de la ligne d'entête
             G.nb_nodes=int(data[0])
             G.nb_edges=int(data[1])
     return G
