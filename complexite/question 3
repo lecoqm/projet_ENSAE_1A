@@ -1,1 +1,2 @@
-
+En utilisant un algorithme de parcours en largeur, on peut trouver un chemin. Comme on passe au maximum une fois pas noeud et par arête, la complexité est :
+O(|S|+|A|), avec |S| le nombre de sommet et |A| le nombre d'arête.
