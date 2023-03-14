@@ -1,0 +1,25 @@
+# This will work if ran from the root folder.
+import sys 
+sys.path.append("delivery_network")
+
+from graph import graph_from_file
+from kruskal import kruskal
+import unittest   # The test framework
+
+input="/home/onyxia/projet_ENSAE_1A/input/"
+
+class Test_MinimalPower(unittest.TestCase):
+    def test_network3(self):
+        g = graph_from_file(input+"network.03.in")
+        g_mst=kruskal(g)
+        self.assertEqual(g_mst.graph[1], [[2,10,1]])
+
+    def test_network4(self):
+        g = graph_from_file(input+"network.04.in")
+        g_mst=kruskal(g)
+        self.assertEqual(g_mst.graph[1], [[2,4,89]])
+        self.assertEqual(g_mst.graph[2], [[3, 4, 3], [1, 4, 89]])
+
+
+if __name__ == '__main__':
+    unittest.main()
