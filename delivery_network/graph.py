@@ -157,40 +157,66 @@ class Graph:
         # On vérifie que src!=dest
         if src==dest:
             return None,None
-        # On fait un parcours en largeur.
-        predecessor={} # On crée un dictionnaire où on va associer les noeuds à leur prédécesseur
-        queue=[src] # On initialise la file 
-        test=True # Permet de vérifier si on atteint dest
-        # On copie le graphe pour pouvoir supprimer les arêtes par lesquels on passe
-        # au fur et à mesure
-        graph=copy.deepcopy(self.graph) 
-        while test:
-            node=queue[0]
-            neighbors=graph[node]
-            for neighbor in neighbors:
-                # On retire l'arête par laquelle on vient de passer
-                # pour éviter de repasser dessus
-                for i in graph[neighbor[0]]:
-                    if i[0]==node:
-                        graph[neighbor[0]].remove(i)
-                # On associe à chaqu'un des voisins du noeud ce noeud comme prédécesseur
-                predecessor[neighbor[0]]=[node,neighbor[1]]
-                queue.append(neighbor[0])
-                # On regarde si on a atteint dest
-                if neighbor[0]==dest:
-                    test=False
-            # On retire le noeud sur lequel on travaillait de a file
-            queue.pop(0)
-        path=[dest]
-        node=dest
-        power=0
-        while node != src:
-            if predecessor[node][1]>power:
-                power=predecessor[node][1]
-            node=predecessor[node][0]
-            path.append(node)
-        path.reverse()
-        return path, power
+        depth_src=self.depth[src]
+        depth_dest=self.depth[dest]
+        path_src=[]
+        path_dest=[]
+        while depth_src<depth_dest:
+            depth_dest-=1
+            path_dest.append([dest,self.parents[dest][1]])
+            dest=self.parents[dest][0]
+        while depth_src>depth_dest:
+            depth_src-=1
+            path_src.append([src,self.parents[src][1]])
+            src=self.parents[src][0]
+        while src!=dest:
+            path_dest.append([dest,self.parents[dest][1]])
+            path_src.append([src,self.parents[src][1]])
+            src=self.parents[src][0]
+            dest=self.parents[dest][0]
+        if path_dest==[]:
+            path_src.append([src,self.parents[src][1]])
+            power=max([path_src[i][1] for i in range(len(path_src))])
+            path=[path_src[i][0] for i in range(len(path_src))]
+            return path,power
+        if path_src==[]:
+            path_dest.append([src,self.parents[dest][1]])
+            power=max([path_dest[i][1] for i in range(len(path_dest))])
+            path=[path_dest[i][0] for i in range(len(path_dest))]
+            path.reverse()
+            return path,power
+        if path_dest[-1][1]<path_src[-1][1]:
+            path_dest.pop()
+        else:
+            path_src.pop()
+        path_dest.reverse()
+        path_1=path_src+path_dest
+        power=max([path_1[i][1] for i in range(len(path_1))])
+        path=[path_1[i][0] for i in range(len(path_1))]
+        return path,power
+
+    def Depth_First_Search_init(self):
+        self.parents={}   # dictionnaire des parents
+        self.depth={}      # dictionnaire de la profondeur
+        # dictionnaire pour savoir si les noeuds ont déjà étés parcourus
+        nodes_known={node:True for node in self.nodes} 
+        for node in self.nodes:   # On parcours tous les noeuds du graphe
+            if nodes_known[node]:   # Si ils ont déjà été parcouru, on ne les prend pas une seuconde fois
+                nodes_known[node]=False
+                self.depth[node]=0 # initialise la profondeur
+                self.parents[node]=[0,0]
+                # On regarde sa composante connexe
+                self.Depth_First_Search(node,nodes_known,0)
+    
+    def Depth_First_Search(self,node,nodes_known,depth):
+        # On fait un parcours en profondeur en relevant les parents et la profondeur de chaque noeud
+        for node_neighbor in self.graph[node]:
+            if nodes_known[node_neighbor[0]]:
+                nodes_known[node_neighbor[0]]=False
+                self.parents[node_neighbor[0]]=[node,node_neighbor[1]]
+                self.depth[node_neighbor[0]]=depth+1
+                self.Depth_First_Search(node_neighbor[0],nodes_known,depth+1)
+
 
     def min_power(self, src, dest):
         """
