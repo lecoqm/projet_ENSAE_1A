@@ -1,1 +1,3 @@
-
+Dans ce programme, on doit dans le pire des cas parcourir toutes les arrêtes et tout les noeuds.
+Ce programme fonctionne par itération noeud par noeud, et dans chaque itération, les nouveaux calculs de dist et de distprime on une compléxité du nombre de noeud.
+Donc la compléxité de la fonction est en O(|S|^2+|A|).
