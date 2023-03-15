@@ -1,1 +1,7 @@
+Au départ, la fonction recrée toutes les arêtes sous une forme exploitable pour kruskal en une compléxité O(|A|).
+Puis elle trie les arêtes pour une compléxité en O(|A|*ln(|A|)
 
+Puis cette fonction parcours l'ensemble des arêtes du graphe et à chaque fois appelle la fonction find qui à une compléxité de O(|S|).
+Donc cette partie à une compléxité en O(|S|*|A|).
+
+Donc au final cette fonction a une complexité de O(|A|*(|S|+ln(|A|)).
