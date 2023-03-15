@@ -1,0 +1,5 @@
+L'arbre couvrant de poids minimal permet bien d'obtenir le chemin avec le plus petit poid. Or il y a seulement V-1 arêtes. Or pour déterminer le chemin,
+ont passe au maximum une fois par chemin. Donc trouver le chemin une fois l'arbre couvrant trouvé se fait avec une compléxité de O(V).
+Alors que dans le graphe, il peut y avoir jusqu'à (V-1)*(V-2)/2 arêtes (si tout les noeuds sont reliés entre eux). 
+On a donc une compléxité en O(V^2), ce qui rend la recherche du chemin beaucoup plus longue.
+D'où l'affirmation.
