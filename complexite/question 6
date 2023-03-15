@@ -1,5 +1,6 @@
-La fonction appelle la fonction connected_components_set, qui est un parcours en profondeur et a donc une compléxité en O(|S|+|A|).
+La fonction power_min appelle la fonction connected_components_set, qui est un parcours en profondeur et a donc une compléxité en O(|S|+|A|).
 Puis elle appelle la fonction get_path_with_power log(P). (Avec log=log de 2, et P la puissance).
 Puis elle fait une dichotomie entre 2^(p) et 2^(p+1) (avec p la partie entière de log(P)), ou elle appelle donc O(log(P)) la fonction get_path_with_power.
 
-Or la fonction get_path_with_power a une compléxité de 
+Or la fonction get_path_with_power a une compléxité de O(|S|^2+|A|).
+Donc la complexité de la fonction power_min vaut : O(log(P)*(|S|^2+|A|).
