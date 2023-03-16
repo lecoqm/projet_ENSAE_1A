@@ -120,8 +120,8 @@ class Graph:
         connected_component=[node]
         neighbors=[self.graph[node][i][0] for i in range(len(self.graph[node]))]
         for node_neighbor in neighbors:
-            if node_neighbor not in nodes_known:
-                nodes_known.add(node_neighbor) # On ajoute d'abord les voisins de notre noeud initiale
+            if nodes_known[node_neighbor]:
+                nodes_known[node_neighbor]=False # On ajoute d'abord les voisins de notre noeud initiale
                 #Puis on itère la fonction pour avoir les voisins des voisins,...
                 connected_component_1,nodes_known=self.one_connected_components(node_neighbor,nodes_known)
                 connected_component+=connected_component_1
@@ -129,10 +129,10 @@ class Graph:
 
     def connected_components(self):
         self.connect_components=[]
-        nodes_known=set()
+        nodes_known={node:True for node in self.nodes}  # Permet de savoir si un noeud est déjà parcouru
         for node in self.nodes:   # On parcours tous les noeuds du graphe
-            if node not in nodes_known:   # Si ils ont déjà été parcouru, on ne les prend pas une seuconde fois
-                nodes_known.add(node)
+            if nodes_known[node]:   # Si ils ont déjà été parcouru, on ne les prend pas une seuconde fois
+                nodes_known[node]=False
                 # On regarde sa composante connexe
                 connect_componentes, nodes_known=self.one_connected_components(node, nodes_known)
                 self.connect_components.append(connect_componentes)
@@ -149,18 +149,20 @@ class Graph:
     
     def kpath(self,src,dest):
         # On vérifie src et dest sont dans la même composante connexe
+        """
         connected_components=self.connected_components()
         for connected in connected_components:
             if src in connected:
                 if dest not in connected:
-                    return None,None
+                    return None,None"""
         # On vérifie que src!=dest
         if src==dest:
             return None,None
         depth_src=self.depth[src]
         depth_dest=self.depth[dest]
-        path_src=[]
-        path_dest=[]
+        path_src=[]  # pour la route partant de src
+        path_dest=[]   # pour la route partant de dest
+        # Pour le noeud avec la plus grande profoncdeur, on remonte l'arbre jusqu'à avoir la même profondeur
         while depth_src<depth_dest:
             depth_dest-=1
             path_dest.append([dest,self.parents[dest][1]])
@@ -169,11 +171,14 @@ class Graph:
             depth_src-=1
             path_src.append([src,self.parents[src][1]])
             src=self.parents[src][0]
+        # Puis on remonte les ancêtres juasqu'à tomber sur le même noeud
         while src!=dest:
             path_dest.append([dest,self.parents[dest][1]])
             path_src.append([src,self.parents[src][1]])
             src=self.parents[src][0]
             dest=self.parents[dest][0]
+        # Les deux if suivant permettent d'éviter un bug dans le cas où, lorsque l'on remonte la profondeur d'un noeud, on tombe directement
+        # sur l'autre noeud comme  noeud commun.
         if path_dest==[]:
             path_src.append([src,self.parents[src][1]])
             power=max([path_src[i][1] for i in range(len(path_src))])
@@ -185,6 +190,7 @@ class Graph:
             path=[path_dest[i][0] for i in range(len(path_dest))]
             path.reverse()
             return path,power
+        # sinon on colle les routes path_dest et path_src l'un à l'autre et on renvoie le trajet crée.
         if path_dest[-1][1]<path_src[-1][1]:
             path_dest.pop()
         else:
@@ -196,6 +202,11 @@ class Graph:
         return path,power
 
     def Depth_First_Search_init(self):
+        """
+        Le but de cette fonction est de faire un parcours en profondeur de tout à partir d'une racine.
+        Pour chaque noeud, on va associé son parent, ainsi qu'une profondeur, qui correspond au nombre
+        d'arête entre ce noeud et le noeud racine.
+        """
         self.parents={}   # dictionnaire des parents
         self.depth={}      # dictionnaire de la profondeur
         # dictionnaire pour savoir si les noeuds ont déjà étés parcourus
@@ -203,7 +214,7 @@ class Graph:
         for node in self.nodes:   # On parcours tous les noeuds du graphe
             if nodes_known[node]:   # Si ils ont déjà été parcouru, on ne les prend pas une seuconde fois
                 nodes_known[node]=False
-                self.depth[node]=0 # initialise la profondeur
+                self.depth[node]=0 # initialise la profondeur, il s'agit de notre racine par cette composante connexe.
                 self.parents[node]=[0,0]
                 # On regarde sa composante connexe
                 self.Depth_First_Search(node,nodes_known,0)
@@ -287,10 +298,10 @@ def graph_from_file(filename):
         if len(data)==3:    # Si trois éléments, alors il n'y a pas la distance
             node1,node2,power_min=int(data[0]),int(data[1]),int(data[2])
             G.add_edge(node1,node2,power_min)
-        elif len(data)==4: # Si quatre éléments, alors il y a la distance
+        if len(data)==4: # Si quatre éléments, alors il y a la distance
             node1,node2,power_min,dist=int(data[0]),int(data[1]),int(data[2]),int(data[3])
             G.add_edge(node1,node2,power_min,dist)
-        elif len(data)==2:    # Si deux éléments, alors il s'agit de la ligne d'entête
+        if len(data)==2:    # Si deux éléments, alors il s'agit de la ligne d'entête
             G.nb_nodes=int(data[0])
             G.nb_edges=int(data[1])
     return G
