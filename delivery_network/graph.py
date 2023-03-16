@@ -287,10 +287,10 @@ def graph_from_file(filename):
         if len(data)==3:    # Si trois éléments, alors il n'y a pas la distance
             node1,node2,power_min=int(data[0]),int(data[1]),int(data[2])
             G.add_edge(node1,node2,power_min)
-        if len(data)==4: # Si quatre éléments, alors il y a la distance
+        elif len(data)==4: # Si quatre éléments, alors il y a la distance
             node1,node2,power_min,dist=int(data[0]),int(data[1]),int(data[2]),int(data[3])
             G.add_edge(node1,node2,power_min,dist)
-        if len(data)==2:    # Si deux éléments, alors il s'agit de la ligne d'entête
+        elif len(data)==2:    # Si deux éléments, alors il s'agit de la ligne d'entête
             G.nb_nodes=int(data[0])
             G.nb_edges=int(data[1])
     return G
