@@ -1,6 +1,5 @@
 from graph import Graph, graph_from_file
 from kruskal import kruskal, union, find
-# from trucks import
 import time
 import copy
 import sys
