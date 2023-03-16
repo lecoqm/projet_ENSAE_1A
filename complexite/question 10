@@ -1,5 +1,6 @@
 """
-On regarde la temps mis pour faire l'ensemble des routes du fichier route2.in. Le programme prend 977847 secondes à traiter les 20 premières routes.
-Ce qui donne 4 889 235 000 secondes pour toutes les routes de route2.in, où 56 000 jours.
+On regarde la temps mis pour faire l'ensemble des routes du fichier route1.in. Le programme prend 0.1 secondes à faire les 100 routes.
+Ce qui, pour des fichiers plus long, rend le temps trop important, il serait ainsi de 1000 secondes pour le fichier 2 et ses 100 000 routes.
+Et en réalité le temps d'execution serait encore plus lent car la taille du graphe est bien plus importante.
 """
 
