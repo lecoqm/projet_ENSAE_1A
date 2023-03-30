@@ -1,0 +1,26 @@
+def sort_out_trucks(file_in,file_out):
+    f=open(file_in,"r")
+    lines=f.readlines()    # On lit ligne par ligne
+    lines.pop(0)
+    power_max=0
+    nb_trucks=0
+    trucks=[]
+    for l in lines:
+        data=l.split(" ")
+        if len(data)==2:
+            trucks.append([int(data[0]),int(data[1].rstrip("\n"))])
+    trucks=sorted(trucks,key=lambda x: x[1])
+    trucks_sort=[]
+    for truck in trucks:
+        if truck[0]>power_max:
+            power_max=truck[0]
+            nb_trucks+=1
+            trucks_sort.append(truck)
+    with open(file_out,"w") as f_out:
+        f_out.write(str(nb_trucks))
+        for truck in trucks_sort:
+            f_out.write("\n"+str(truck[0])+" "+str(truck[1]))
+        
+file_in="/home/onyxia/projet_ENSAE_1A/input/trucks.2.in"
+file_out="/home/onyxia/projet_ENSAE_1A/output/trucks.2.min.in"
+sort_out_trucks(file_in,file_out)
