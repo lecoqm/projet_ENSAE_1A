@@ -1,21 +1,19 @@
 from graph import Graph, graph_from_file
+import itertools
+import time
 
-def ensemble_comb_routes(nb_routes):         # renvoie l'ens des combinaisons de routes en binaire         # On peut le faire avec la fct permutation ?  
-    ens_comb_routes = []
-    nb_comb=0
-    for j in range (1,nb_routes+1) :
-        nb_comb += 2^j
-    for i in range(1,nb_comb+1):
-        i = bin(i)
-        i=i[2::]
-        comb_routes = [c for c in i]
-        if len(comb_routes) < nb_routes :
-            for k in range (1,nb_routes - len(comb_routes)):
-                comb_routes.insert(0, "0")
-        ens_comb_routes.append(comb_routes)
-    return ens_comb_routes
+def truck_choice(route, trucks):
+    power = g.min_power(route[0], route[1])[0]
+    if trucks[0][0]<power:
+        return None
+    i=0
+    while i<len(trucks) and trucks[i][0]>=power:
+        i+=1
+    if i==len(trucks):
+        return trucks[-1]
+    return trucks[i]
 
-def brut_force(file_routes, file_trucks):
+def brut_force(file_routes,file_trucks,contrainte):
     # Initialisation
     routes=open(file_routes,"r")
     lines = routes.readlines() # attention c'est des string + split
@@ -24,50 +22,50 @@ def brut_force(file_routes, file_trucks):
     for l in lines:
         data=l.split(" ")
         routes_lines.append([int(data[0]),int(data[1]),int(data[2].rstrip("\n"))]) 
-    trucks=open(file_routes,"r")
+    trucks=open(file_trucks,"r")
     lines = trucks.readlines() # attention c'est des string + split
-    trucks_lines=[]
+    i=0
     lines.pop(0)
     trucks_lines=[]
     for l in lines:
+        i+=1
         data=l.split(" ")
-        trucks_lines.append([int(data[0]),int(data[1].rstrip("\n"))])
-    B = 25*10^9                  # contrainte budgétaire
-    C = 0                        # coût d'un trajet initialisé à 0
-    trucks_lines = sorted(trucks_lines, key=lambda x:x[1]) # trie les camions en fonction de leur coût ordre croissant
-    flotte_trucks = []           # on initialise la flotte de camions  
+        trucks_lines.append([int(data[0]),int(data[1].rstrip("\n")),i])
+    trucks_lines = sorted(trucks_lines, key=lambda x:x[1],reverse=True) # trie les camions en fonction de leur coût ordre croissant
     ens_comb_routes = []         # on veut remplir cette liste avec de "vraies routes" en fonction de la liste en binaire qu'on a déjà
-    for comb_routes in ensemble_comb_routes(int(nb_routes)) :
-        combinaison_routes = []
-        profit = 0                                   # on initialise le profit à 0
-        m = 0   # variable de comptage initialisé à 1 car on ne veut pas de la 1ère ligne de file_routes
-        for k in comb_routes :                   # on transforme les binaires de comb_route en "vraies routes"
-            if int(k)==1 :
-                combinaison_routes.append(routes_lines[m])
-                profit += int(routes_lines[m][2])
-                ens_comb_routes.append([combinaison_routes,profit])
-            m += 1
+    ens_comb_routes_1=[]
+    for i in range(1,1+len(routes_lines)):
+        for j in itertools.combinations(routes_lines, i):
+            ens_comb_routes_1.append(list(j))
+    for list_routes in ens_comb_routes_1:
+        profit=0
+        for route in list_routes:
+            profit+=route[2]
+        ens_comb_routes.append([list_routes, profit])
     ens_comb_routes = sorted(ens_comb_routes, key=lambda x:x[1], reverse = True)    # On trie l'ensemble des comb de route en fonction du profit ordre décroissant
     i=0     # variable de comptage sur ens_comb_routes
-    a=0     # variable de comptage sur trucks_lines
-    cost = 0    # coût d'une route initialisée à 0
     for comb_routes in ens_comb_routes:
-        while C < B :
-            # On calcule le coût de la i ème route
-            src = comb_routes[0][i][0]
-            dest = comb_routes[0][i][1]
-            power = g.min_power(src, dest)[0]
-            while trucks_lines[a][0] > power and a < len(trucks_lines) :
-                a +=1
-                cost = trucks_lines[a][1]
-                truck = trucks_lines[a]
-            C += cost
-            flotte_trucks += [truck,ens_comb_routes[i]]
-            i+=1
-        return flotte_trucks
+        choosen_trucks=[]
+        cost=0
+        comb_routes_1=comb_routes[0]
+        for route in comb_routes_1:
+            truck=truck_choice([route[0],route[1]],trucks_lines)
+            if truck !=None:
+                cost+=truck[0]
+                choosen_trucks.append(truck)
+            else:
+                cost=contrainte+1
+        if cost<=contrainte:
+            return comb_routes, choosen_trucks, cost
 
-file_routes="/home/onyxia/projet_ENSAE_1A/input/routes.1.in"
+
+file_routes="/home/onyxia/projet_ENSAE_1A/input/routes.0.in"
 file_trucks="/home/onyxia/projet_ENSAE_1A/output/trucks.0.min.in"
 g=graph_from_file("/home/onyxia/projet_ENSAE_1A/input/network.1.in")
-brut_force(file_routes, file_trucks)
- 
+contrainte=25*(10**9)
+
+t1=time.time()
+routes,trucks,cost=brut_force(file_routes, file_trucks,contrainte)
+print(len(routes), trucks)
+t2=time.time()
+print(t2-t1)
