@@ -1,12 +1,15 @@
 from graph import Graph, graph_from_file
+from kruskal import kruskal, union, find
 import time
+import sys
 
-def truck_choice(route, trucks):
+def truck_choice(puissance, route_number, trucks):
     """
     Cette fonction permet de trouver le camion le moins cher pouvant passer par cette route.
     La liste trucks doit être triée par ordre décroissant.
     """
-    power = g.min_power(route[0], route[1])[0]
+    #print(route_number)
+    power = puissance[route_number-1]
     if trucks[0][0]<power:
         return None
     i=0
@@ -17,20 +20,28 @@ def truck_choice(route, trucks):
     return trucks[i]
 
 
-def greedy(file_routes,file_trucks, contrainte):
+def greedy(file_routes,file_puissance,file_trucks, contrainte):
     """
     Cette fonction trie les routes par ordre de profit décroissant,
     puis affecte dans cet ordre à chaque route le camion le moins cher pouvant la parcourir
     """
-    # On crée les listes des routes et des camions.
+    # On crée les listes des routes, des puissances et des camions.
     f=open(file_routes,"r")
     lines=f.readlines()
     lines.pop(0)
     routes=[]
+    i=0
+    for l in lines:
+        i+=1
+        data=l.split(" ")
+        routes.append([int(data[0]),int(data[1]),int(data[2].rstrip("\n")),i])
+    routes=sorted(routes,key=lambda x: x[2],reverse=True)
+    f=open(file_puissance,"r")
+    lines=f.readlines()
+    puissance=[]
     for l in lines:
         data=l.split(" ")
-        routes.append([int(data[0]),int(data[1]),int(data[2].rstrip("\n"))])
-    routes=sorted(routes,key=lambda x: x[2],reverse=True)
+        puissance.append(int(data[0].rstrip("\n")))
     f=open(file_trucks,"r")
     lines=f.readlines()
     lines.pop(0)
@@ -47,23 +58,28 @@ def greedy(file_routes,file_trucks, contrainte):
     routes_choosen=[]
     i=0
     # On vient parcourir la liste des routes par ordre de profit décroissant et on leur trouve leur
-    # camion associé, jusqu'à épuisement de la contrainte budgétaire.
-    truck=truck_choice([routes[0][0],routes[0][1]], trucks)
-    while cost+truck[1]<=contrainte and i<len(routes):
+    # camion associé, jusqu'à épuisement de la contrainte budgétaire
+    while cost<=contrainte and i<len(routes):
+        truck=truck_choice(puissance,routes[i][3], trucks)
+        if truck !=None:
+            routes_choosen.append(routes[i])
+            trucks_choosen.append(truck)
+            cost+=truck[1]
         i+=1
-        routes_choosen.append(routes[0])
-        trucks_choosen.append(truck)
-        cost+=truck[1]
-        truck=truck_choice([routes[0][0],routes[0][1]], trucks)
+    if cost>contrainte:
+        routes_choosen.pop()
+        trucks_choosen.pop()
     return routes_choosen, trucks_choosen, cost
 
-file_routes="/home/onyxia/projet_ENSAE_1A/input/routes.0.in"
-file_trucks="/home/onyxia/projet_ENSAE_1A/output/trucks.0.min.in"
-g=graph_from_file("/home/onyxia/projet_ENSAE_1A/input/network.1.in")
+file_routes="/home/onyxia/projet_ENSAE_1A/input/routes.2.in"
+file_puissance="/home/onyxia/projet_ENSAE_1A/output/network.2.out"
+file_trucks="/home/onyxia/projet_ENSAE_1A/output/trucks.2.min.in"
+file_network="/home/onyxia/projet_ENSAE_1A/input/network.2.in"
+
 contrainte=25*(10**9)
 
 t1=time.time()
-routes,trucks,cost=greedy(file_routes, file_trucks,contrainte)
+routes,trucks,cost=greedy(file_routes,file_puissance, file_trucks,contrainte)
 #print(len(routes), trucks)
 t2=time.time()
 print(t2-t1)
