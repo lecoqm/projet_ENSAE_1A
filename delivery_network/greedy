@@ -91,6 +91,10 @@ print(t2-t1)"""
 
 
 def rendement(file_in,file_puissance,file_out,file_trucks):
+    """
+    Cette fonction prend un fichier avec les routes et renvoie un nouveau fichier 
+    avec le "rendement" de la route à la place du profit.
+    """
     f=open(file_in,"r")
     lines=f.readlines()
     nb_routes=lines.pop(0)
