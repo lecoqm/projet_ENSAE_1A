@@ -71,6 +71,7 @@ def greedy(file_routes,file_puissance,file_trucks, contrainte):
         trucks_choosen.pop()
     return routes_choosen, trucks_choosen, cost
 
+"""
 file_routes="/home/onyxia/projet_ENSAE_1A/input/routes.2.in"
 file_puissance="/home/onyxia/projet_ENSAE_1A/output/network.2.out"
 file_trucks="/home/onyxia/projet_ENSAE_1A/output/trucks.2.min.in"
@@ -82,4 +83,35 @@ t1=time.time()
 routes,trucks,cost=greedy(file_routes,file_puissance, file_trucks,contrainte)
 #print(len(routes), trucks)
 t2=time.time()
-print(t2-t1)
+print(t2-t1)"""
+
+
+def rendement(file_in,file_puissance,file_out):
+    f=open(file_in,"r")
+    lines=f.readlines()
+    nb_routes=lines.pop(0)
+    routes=[]
+    i=0
+    for l in lines:
+        i+=1
+        data=l.split(" ")
+        routes.append([int(data[0]),int(data[1]),int(data[2].rstrip("\n")),i])
+    f=open(file_puissance,"r")
+    lines=f.readlines()
+    puissance=[]
+    for l in lines:
+        data=l.split(" ")
+        puissance.append(int(data[0].rstrip("\n")))
+    for route in routes:
+        truck=truck_choice(puissance,routes[i][3], trucks)
+        route[2]=route[2]/truck[1]
+    with open(file_out,"w") as f_out:
+        f_out.write(str(nb_routes))
+        for truck in trucks_sort:
+            f_out.write("\n"+str(route[0])+" "+str(route[1])+" "+str(route[2]))
+
+
+file_in="/home/onyxia/projet_ENSAE_1A/input/routes.0.in"
+file_out="/home/onyxia/projet_ENSAE_1A/output/routes.0.rend.in"
+file_puissance="/home/onyxia/projet_ENSAE_1A/output/network.1.out"
+rendement(file_in,file_puissance,file_out)
