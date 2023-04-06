@@ -1,3 +1,4 @@
+
 def sort_out_trucks(file_in,file_out):
     f=open(file_in,"r")
     lines=f.readlines()    # On lit ligne par ligne
