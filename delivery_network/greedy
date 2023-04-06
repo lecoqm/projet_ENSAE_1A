@@ -2,6 +2,7 @@ from graph import Graph, graph_from_file
 from kruskal import kruskal, union, find
 import time
 import sys
+import numpy as np
 
 def truck_choice(puissance, route_number, trucks):
     """
@@ -9,9 +10,9 @@ def truck_choice(puissance, route_number, trucks):
     La liste trucks doit être triée par ordre décroissant.
     """
     #print(route_number)
-    power = puissance[route_number-1]
+    power = puissance[route_number]
     if trucks[0][0]<power:
-        return None
+        return [None,None]
     i=0
     while i<len(trucks) and trucks[i][0]>=power:
         i+=1
@@ -34,14 +35,17 @@ def greedy(file_routes,file_puissance,file_trucks, contrainte):
     for l in lines:
         i+=1
         data=l.split(" ")
-        routes.append([int(data[0]),int(data[1]),int(data[2].rstrip("\n")),i])
+        routes.append([int(data[0]),int(data[1]),float(data[2].rstrip("\n")),i])
     routes=sorted(routes,key=lambda x: x[2],reverse=True)
     f=open(file_puissance,"r")
     lines=f.readlines()
     puissance=[]
     for l in lines:
         data=l.split(" ")
-        puissance.append(int(data[0].rstrip("\n")))
+        if data[0].rstrip("\n")=="None":
+            puissance.append(np.inf)
+        else:
+            puissance.append(int(data[0].rstrip("\n")))
     f=open(file_trucks,"r")
     lines=f.readlines()
     lines.pop(0)
@@ -60,7 +64,7 @@ def greedy(file_routes,file_puissance,file_trucks, contrainte):
     # On vient parcourir la liste des routes par ordre de profit décroissant et on leur trouve leur
     # camion associé, jusqu'à épuisement de la contrainte budgétaire
     while cost<=contrainte and i<len(routes):
-        truck=truck_choice(puissance,routes[i][3], trucks)
+        truck=truck_choice(puissance,routes[i][3]-1, trucks)
         if truck !=None:
             routes_choosen.append(routes[i])
             trucks_choosen.append(truck)
@@ -86,7 +90,7 @@ t2=time.time()
 print(t2-t1)"""
 
 
-def rendement(file_in,file_puissance,file_out):
+def rendement(file_in,file_puissance,file_out,file_trucks):
     f=open(file_in,"r")
     lines=f.readlines()
     nb_routes=lines.pop(0)
@@ -96,22 +100,42 @@ def rendement(file_in,file_puissance,file_out):
         i+=1
         data=l.split(" ")
         routes.append([int(data[0]),int(data[1]),int(data[2].rstrip("\n")),i])
+    f=open(file_trucks,"r")
+    lines=f.readlines()
+    lines.pop(0)
+    trucks=[]
+    for l in lines:
+        data=l.split(" ")
+        trucks.append([int(data[0]),int(data[1].rstrip("\n"))])
+    trucks=sorted(trucks,key=lambda x: x[1],reverse=True)
     f=open(file_puissance,"r")
     lines=f.readlines()
     puissance=[]
     for l in lines:
         data=l.split(" ")
-        puissance.append(int(data[0].rstrip("\n")))
-    for route in routes:
-        truck=truck_choice(puissance,routes[i][3], trucks)
-        route[2]=route[2]/truck[1]
+        if data[0].rstrip("\n")=="None":
+            puissance.append(np.inf)
+        else:
+            puissance.append(int(data[0].rstrip("\n")))
+    for i in range(len(routes)):
+        truck=truck_choice(puissance,routes[i][3]-1, trucks)
+        if truck[1]==None:
+            routes[i][2]==0
+        else:
+            routes[i][2]=routes[i][2]/truck[1]
     with open(file_out,"w") as f_out:
         f_out.write(str(nb_routes))
-        for truck in trucks_sort:
-            f_out.write("\n"+str(route[0])+" "+str(route[1])+" "+str(route[2]))
+        for route in routes:
+            f_out.write(str(route[0])+" "+str(route[1])+" "+str(route[2])+"\n")
 
 
-file_in="/home/onyxia/projet_ENSAE_1A/input/routes.0.in"
-file_out="/home/onyxia/projet_ENSAE_1A/output/routes.0.rend.in"
-file_puissance="/home/onyxia/projet_ENSAE_1A/output/network.1.out"
-rendement(file_in,file_puissance,file_out)
+file_in="/home/onyxia/projet_ENSAE_1A/input/routes.2.in"
+file_out="/home/onyxia/projet_ENSAE_1A/output/routes.2.rend.in"
+file_puissance="/home/onyxia/projet_ENSAE_1A/output/network.2.out"
+file_trucks="/home/onyxia/projet_ENSAE_1A/output/trucks.2.min.in"
+
+rendement(file_in,file_puissance,file_out,file_trucks)
+
+contrainte=25*(10**9)
+file_routes="/home/onyxia/projet_ENSAE_1A/output/routes.2.rend.in"
+routes,trucks,cost=greedy(file_routes,file_puissance, file_trucks,contrainte)
